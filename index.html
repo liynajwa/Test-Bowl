@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Word Strike Bowling 3D</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&display=swap');
+*{box-sizing:border-box}
+:root{--purple:#482080;--dark:#211644;--pink:#ff4ac5;--yellow:#ffe600;--green:#39f5ba;--blue:#45dfff;--cyan-accent:#00f0ff;--neon-green:#00ff88}
+body{margin:0;background:#39146b;color:white;font-family:'Baloo 2',sans-serif;overflow-x:hidden}
+button{font:inherit;touch-action:manipulation;cursor:pointer}
+header{background:linear-gradient(90deg,#8be6ff,#45dfff);color:#28204f;padding:15px 12px 27px;font-size:22px;font-weight:800;text-align:center;border-bottom:4px solid white}
+.game{min-height:100vh;background:linear-gradient(#7ee3ff 0 10%,#4b2182 10% 42%,#f6a400 42% 47%,#4b2182 47%);position:relative;overflow:hidden}
+.hud{position:relative;z-index:8;display:grid;grid-template-columns:1.3fr .8fr .7fr 54px;gap:5px;padding:12px 10px}
+.box{background:linear-gradient(145deg,#344d83,#241344);border:2px solid #7663a8;border-radius:22px;padding:9px 7px;text-align:center;box-shadow:0 5px 0 #21143b}
+.box small{display:block;color:#c6d5ff;font-size:12px;font-weight:800}
+.box strong{font-size:25px;color:var(--yellow);line-height:1.3}
+.levelbox{display:flex;align-items:center;gap:9px;text-align:left}
+.badge{background:linear-gradient(#ffbd38,#ff8100);border-radius:17px;color:#271444;padding:8px 12px;font-size:27px}
+#sound{font-size:22px;color:white}
+.pinpanel{position:relative;z-index:6;margin:-1px auto 0;width:min(355px,90%);padding:10px;background:#261744ee;border:2px solid #6c55a3;border-radius:24px;display:flex;align-items:center;justify-content:space-around;gap:8px}
+.triangle{font-size:13px;color:var(--neon-green);line-height:1.2;text-align:center;letter-spacing:3px}
+.pinstatus{font-weight:800;font-size:17px;color:#ff9bcf}
+.pinstatus b{color:var(--neon-green);font-size:29px}
+.sign{margin:12px -10px 0;background:#ffad08;color:#502090;border-block:5px solid white;text-align:center;font-weight:800;font-size:clamp(18px,4vw,32px);white-space:nowrap;overflow:hidden;padding:4px}
+.arena{height:clamp(310px,54vh,510px);position:relative;perspective:700px;overflow:hidden;background:linear-gradient(#4b2182,#35115e)}
+.lights{position:absolute;top:10px;width:100%;display:flex;justify-content:space-around}
+.lights i{width:16px;height:16px;border-radius:50%;background:var(--blue);box-shadow:0 0 15px currentColor}
+.lights i:nth-child(2n){background:var(--pink)}
+.lights i:nth-child(3n){background:var(--neon-green)}
+.lights i:nth-child(4n){background:var(--cyan-accent)}
+.lane{position:absolute;inset:19% -5% -10%;clip-path:polygon(39% 0,61% 0,100% 100%,0 100%);background:linear-gradient(90deg,#ff45c7 0 15%,#ff9c30 15% 23%,#ffe600 23% 77%,#ff9c30 77% 85%,#ff45c7 85%);border-top:8px solid #ffc5ff}
+.lane:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 19%,#fff3 20% 20.4%);opacity:.35}
+.side-lane{position:absolute;bottom:0;height:25%;width:22%;background:linear-gradient(90deg,#ff6429,#ff9b26);transform:skewY(-15deg)}
+.side-lane.left{left:-8%}.side-lane.right{right:-8%;transform:skewY(15deg)}
+.pinfield{position:absolute;z-index:3;top:22%;left:50%;transform:translateX(-50%);width:110px;display:flex;flex-direction:column;align-items:center;gap:0}
+.pinrow{display:flex;justify-content:center;gap:2px;height:15px}
+.pin{width:10px;height:16px;background:linear-gradient(90deg,#ddd,#fff 35%,#fff);border-radius:5px 5px 3px 3px;position:relative;box-shadow:0 2px 2px #31164a;transition:transform .65s,opacity .65s}
+.pin:before{content:"";position:absolute;top:3px;left:0;right:0;height:3px;background:#ff444d}
+.pin.down{transform:rotate(78deg) translate(12px,5px);opacity:.35}
+.ball{position:absolute;z-index:5;bottom:10px;left:50%;width:42px;height:42px;border-radius:50%;transform:translateX(-50%);background:radial-gradient(circle at 30% 25%,#fff,var(--cyan-accent) 15%,#096cce 65%,#092d78);box-shadow:inset -5px -6px 8px #051a61,0 5px 12px var(--cyan-accent);transition:bottom .7s,left .7s,transform .7s}
+.ball:after{content:"";position:absolute;width:5px;height:5px;border-radius:50%;background:#092c78;top:12px;left:15px;box-shadow:7px 4px #092c78,2px 10px #092c78}
+.controls{position:relative;z-index:7;margin:-22px 12px 0;background:#302047ef;border:2px solid #8b75b5;border-radius:30px;padding:14px 12px 18px;text-align:center}
+.controls h2{font-size:21px;margin:0;color:var(--neon-green)}
+.controls p{margin:2px 0 8px;font-size:14px;color:#d5eaff}
+.prompt{font-size:23px;font-weight:800;color:var(--yellow)}
+.slots,.letters{display:flex;justify-content:center;flex-wrap:wrap;gap:5px;margin:9px auto}
+.slot{width:clamp(29px,7vw,40px);height:43px;border:2px dashed var(--cyan-accent);background:#21163e;border-radius:9px;color:white;font-weight:800;font-size:20px}
+.slot.filled{background:var(--neon-green);color:#163a49;border-style:solid;border-color:white}
+.letter{min-width:37px;height:40px;border-radius:10px;border:0;background:linear-gradient(#fff,#bdeaff);color:#29204c;font-weight:800;font-size:19px;box-shadow:0 3px #6494c0}
+.letter.used{opacity:.25}
+.actions{display:flex;gap:7px;justify-content:center;flex-wrap:wrap}
+.action{border:0;border-radius:13px;padding:9px 15px;font-weight:800;background:var(--yellow);color:#342052;box-shadow:0 3px #ba8612}
+.action.alt{background:var(--blue);color:white}
+.action.cyan{background:var(--cyan-accent);color:#211644}
+.action:disabled{opacity:.4}
+#message{min-height:25px;font-weight:800;color:var(--neon-green);margin-top:5px}
+#throwzone{margin:12px 14px 20px;height:112px;border:4px dashed var(--cyan-accent);border-radius:30px;background:linear-gradient(135deg,#00f0ff33,#2485d288);display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:none;user-select:none;opacity:.65;transition:opacity .3s,background .3s}
+#throwzone.unlocked{opacity:1;border-color:var(--neon-green);background:linear-gradient(135deg,#00ff8855,#2485d2bb)}
+#throwzone .hand{font-size:37px}
+#throwzone b{letter-spacing:3px;color:white}
+#next{display:none}
+@media(max-width:400px){.hud{grid-template-columns:1.2fr .8fr .7fr 43px;padding:8px 6px}.box{padding:7px 4px}.box strong{font-size:20px}.box small{font-size:10px}.badge{padding:6px 8px}.pinpanel{margin-top:0}.arena{height:320px}}
+</style>
+</head>
+<body>
+<div class="game">
+<header>WORD STRIKE BOWLING 🎳</header>
+<div class="hud">
+ <div class="box levelbox"><div class="badge" id="levelno">1</div><div><small id="leveltext">LEVEL 1/2</small><b id="levelname">Numbers</b></div></div>
+ <div class="box"><small>ROUND</small><strong id="round">1/10</strong></div>
+ <div class="box"><small>SCORE</small><strong id="score">0</strong></div>
+ <button class="box" id="sound">🔊</button>
+</div>
+<div class="pinpanel">
+ <div class="triangle">⑦ ⑧ ⑨ ⑩<br>④ ⑤ ⑥<br>② ③<br>①</div>
+ <div class="pinstatus">DOWN <b id="down">0</b><br><span style="color:#c6d5ff">STANDING</span><br><b id="standing">10</b></div>
+</div>
+<div class="sign">YEAR 1 ENGLISH SPELLING • WORD STRIKE BOWLING CLUB</div>
+<div class="arena" id="arena">
+ <div class="lights"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+ <div class="side-lane left"></div><div class="side-lane right"></div>
+ <div class="lane"></div>
+ <div class="pinfield" id="pinfield">
+  <div class="pinrow"><i class="pin"></i></div>
+  <div class="pinrow"><i class="pin"></i><i class="pin"></i></div>
+  <div class="pinrow"><i class="pin"></i><i class="pin"></i><i class="pin"></i></div>
+  <div class="pinrow"><i class="pin"></i><i class="pin"></i><i class="pin"></i><i class="pin"></i></div>
+ </div>
+ <div class="ball" id="ball"></div>
+</div>
+<div class="controls">
+ <h2 id="prompt">SPELL THE WORD!</h2>
+ <p id="instruction">Tap the letters in the correct order.</p>
+ <div class="slots" id="slots"></div>
+ <div class="letters" id="letters"></div>
+ <div class="actions">
+  <button class="action alt" id="clear">CLEAR ↩</button>
+  <button class="action cyan" id="check">CHECK ✓</button>
+  <button class="action" id="next">NEXT ➜</button>
+ </div>
+ <div id="message">Spell correctly to unlock the bowling shot!</div>
+</div>
+<div id="throwzone">
+ <div class="hand">👆</div>
+ <b>SWIPE UP TO BOWL!</b>
+ <small>Unlock after a correct answer</small>
+</div>
+</div>
+<script>
+const sets={
+ numbers:[
+ ["ONE","1️⃣"],["TWO","2️⃣"],["THREE","3️⃣"],["FOUR","4️⃣"],["FIVE","5️⃣"],
+ ["SIX","6️⃣"],["SEVEN","7️⃣"],["EIGHT","8️⃣"],["NINE","9️⃣"],["TEN","🔟"]],
+ colours:[
+ ["RED","🟥"],["BLUE","🟦"],["GREEN","🟩"],["YELLOW","🟨"],["ORANGE","🟧"],
+ ["PURPLE","🟪"],["PINK","💗"],["BLACK","⬛"],["WHITE","⬜"],["BROWN","🟫"]]
+};
+let mode="numbers",round=0,score=0,answer=[],tiles=[],unlocked=false,thrown=false,soundOn=true;
+let ctx;
+const $=id=>document.getElementById(id);
+function beep(f=440,d=.12){
+ if(!soundOn)return;
+ try{ctx ||= new(window.AudioContext||window.webkitAudioContext)();
+ let o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=f;
+ g.gain.value=.1;o.connect(g);g.connect(ctx.destination);o.start();
+ g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+d);o.stop(ctx.currentTime+d);
+ }catch(e){}
+}
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function say(s){$("message").textContent=s}
+function question(){return sets[mode][round]}
+function render(){
+ let [word,pic]=question();answer=Array(word.length).fill(null);unlocked=false;thrown=false;
+ $("levelno").textContent=mode==="numbers"?"1":"2";
+ $("leveltext").textContent="LEVEL "+(mode==="numbers"?"1":"2")+"/2";
+ $("levelname").textContent=mode==="numbers"?"Numbers":"Colours";
+ $("round").textContent=(round+1)+"/10";
+ $("prompt").textContent=pic+"  "+(mode==="numbers"?"NUMBER":"COLOUR");
+ $("instruction").textContent="Spell the word using the letters below.";
+ $("slots").innerHTML="";
+ for(let i=0;i<word.length;i++){
+  let b=document.createElement("button");b.className="slot";b.onclick=()=>remove(i);$("slots").appendChild(b);
+ }
+ let chars=shuffle([...word]);
+ let alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+ while(chars.length<Math.min(word.length+3,10)){
+  let c=alphabet[Math.random()*26|0];if(Math.random()>.45||!chars.includes(c))chars.push(c);
+ }
+ tiles=shuffle(chars).map((c,i)=>({c,id:i,used:false}));
+ drawTiles();resetPins();
+ $("check").disabled=false;$("next").style.display="none";$("next").textContent="NEXT ➜";
+ $("clear").disabled=false;
+ $("ball").style.bottom="10px";$("ball").style.left="50%";$("ball").style.transform="translateX(-50%)";
+ $("down").textContent="0";$("standing").textContent="10";
+ $("throwzone").classList.remove("unlocked");
+ say("Spell correctly to unlock the bowling shot!");
+}
+function drawTiles(){
+ $("letters").innerHTML="";
+ tiles.forEach(t=>{let b=document.createElement("button");b.className="letter"+(t.used?" used":"");
+ b.textContent=t.c;b.disabled=t.used||unlocked;b.onclick=()=>place(t.id);$("letters").appendChild(b)});
+}
+function place(id){
+ if(unlocked)return;let i=answer.findIndex(v=>v===null);if(i<0)return;
+ let t=tiles.find(x=>x.id===id);if(!t||t.used)return;
+ t.used=true;answer[i]=id;let s=$("slots").children[i];s.textContent=t.c;s.classList.add("filled");
+ drawTiles();beep(500,.07);
+}
+function remove(i){
+ if(unlocked||answer[i]===null)return;let t=tiles.find(x=>x.id===answer[i]);t.used=false;answer[i]=null;
+ let s=$("slots").children[i];s.textContent="";s.classList.remove("filled");drawTiles();
+}
+function resetPins(){$("pinfield").querySelectorAll(".pin").forEach(p=>p.classList.remove("down"))}
+$("clear").onclick=()=>{if(unlocked)return;answer.fill(null);tiles.forEach(t=>t.used=false);[...$("slots").children].forEach(s=>{s.textContent="";s.classList.remove("filled")});drawTiles();say("Try again!");};
+$("check").onclick=()=>{
+ if(answer.some(x=>x===null)){say("Fill in every letter first! ✍️");beep(180);return}
+ let w=answer.map(id=>tiles.find(t=>t.id===id).c).join("");
+ if(w!==question()[0]){say("Not quite! Check the letters and try again.");beep(180);return}
+ unlocked=true;score+=100;$("score").textContent=score;$("check").disabled=true;
+ drawTiles();$("throwzone").classList.add("unlocked");say("PERFECT SPELLING! SWIPE UP TO BOWL! 🎳");beep(700);setTimeout(()=>beep(900),100);
+};
+let startY=null,startX=null;
+$("throwzone").addEventListener("pointerdown",e=>{startY=e.clientY;startX=e.clientX;$("throwzone").setPointerCapture(e.pointerId)});
+$("throwzone").addEventListener("pointerup",e=>{
+ if(startY===null)return;
+ let dy=startY-e.clientY,dx=e.clientX-startX;startY=null;
+ if(!unlocked){say("Spell the word correctly first!");beep(180);return}
+ if(thrown)return;
+ if(dy<25){say("Swipe UP to bowl!");return}
+ bowl(dx);
+});
+function bowl(dx=0){
+ if(!unlocked||thrown)return;thrown=true;
+ let ball=$("ball");let laneX=Math.max(30,Math.min(70,50+dx*.15));
+ ball.style.left=laneX+"%";ball.style.bottom="72%";ball.style.transform="translateX(-50%) scale(.55) rotate(500deg)";
+ beep(130,.35);
+ setTimeout(()=>{
+  let pins=[...$("pinfield").querySelectorAll(".pin")];
+  let n=7+(Math.random()*4|0);
+  shuffle(pins).slice(0,n).forEach(p=>p.classList.add("down"));
+  $("down").textContent=n;$("standing").textContent=10-n;
+  let pinPoints=n*10;if(n===10)pinPoints+=50;
+  score+=pinPoints;$("score").textContent=score;
+  say(n===10?"🎉 STRIKE! ALL PINS DOWN! +150 POINTS!":"🎳 "+n+" PINS DOWN! +"+pinPoints+" POINTS!");
+  $("next").style.display="inline-block";$("check").disabled=true;beep(650);setTimeout(()=>beep(880),140);
+ },650);
+}
+$("next").onclick=()=>{
+ if(round<9){round++;render();return}
+ if(mode==="numbers"){mode="colours";round=0;render();say("LEVEL 1 COMPLETE! Now spell the colours! 🎨");return}
+ $("prompt").textContent="🏆 CHAMPION!";
+ $("instruction").textContent="Final score: "+score+" points!";
+ $("slots").innerHTML="";$("letters").innerHTML="";
+ $("check").disabled=true;$("clear").disabled=true;$("next").textContent="PLAY AGAIN";
+ $("next").onclick=()=>{mode="numbers";round=0;score=0;$("score").textContent=0;$("next").textContent="NEXT ➜";render()};
+};
+$("sound").onclick=()=>{soundOn=!soundOn;$("sound").textContent=soundOn?"🔊":"🔇";beep(600)};
+render();
+</script>
+</body>
+</html>
